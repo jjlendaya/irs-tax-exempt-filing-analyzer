@@ -1,0 +1,32 @@
+[project]
+name = "irs-returns"
+version = "0.1.0"
+description = "A web application that analyzes public filed returns from tax-exempt organizations using Forms 990, 990-EZ, and 990-PF"
+authors = [
+    {name = "Jeynald Endaya",email = "jjlendaya@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.14,<4.0"
+dependencies = [
+    "django (>=6.0.1,<7.0.0)",
+    "strawberry-graphql (>=0.288.4,<0.289.0)",
+    "strawberry-graphql-django (>=0.73.1,<0.74.0)",
+    "dotenv (>=0.9.9,<0.10.0)",
+    "dj-database-url (>=3.1.0,<4.0.0)",
+    "psycopg2 (>=2.9.11,<3.0.0)",
+    "gunicorn (>=23.0.0,<24.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.14.11,<0.15.0)",
+    "mypy (>=1.19.1,<2.0.0)",
+    "pytest (>=9.0.2,<10.0.0)",
+    "pytest-django (>=4.11.1,<5.0.0)",
+    "pytest-xdist (>=3.8.0,<4.0.0)"
+]

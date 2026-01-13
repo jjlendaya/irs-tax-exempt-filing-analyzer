@@ -1,0 +1,2 @@
+web: python irs_returns/manage.py runserver
+frontend: npm run dev --prefix irs-returns-frontend
