@@ -1,13 +1,14 @@
 from django.db import models
+from core.models import UUIDAbstractModel, TimestampedAbstractModel
 
 
-class Organization(models.Model):
+class Organization(UUIDAbstractModel, TimestampedAbstractModel):
     name = models.CharField(max_length=255)
     website_url = models.URLField(max_length=255)
     mission_description = models.TextField()
 
 
-class OrganizationReturnInformation(models.Model):
+class OrganizationReturnInformation(UUIDAbstractModel, TimestampedAbstractModel):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     filed_on = models.DateField()
     tax_period_start_date = models.DateField()
