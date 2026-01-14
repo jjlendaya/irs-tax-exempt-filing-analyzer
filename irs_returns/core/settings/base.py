@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "users",
-    "graphql_api",
+    "rest_api",
 ]
 
 MIDDLEWARE = [
