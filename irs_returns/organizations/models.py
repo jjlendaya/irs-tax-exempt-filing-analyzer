@@ -1,5 +1,6 @@
 from django.db import models
-from core.models import UUIDAbstractModel, TimestampedAbstractModel
+
+from core.models import TimestampedAbstractModel, UUIDAbstractModel
 
 
 class Organization(UUIDAbstractModel, TimestampedAbstractModel):
