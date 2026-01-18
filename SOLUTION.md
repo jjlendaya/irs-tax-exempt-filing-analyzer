@@ -11,3 +11,4 @@ Stack
 5. What is just for?
 6. Why is `rest_api` a separate package?
 7. Why do we use UUIDs instead of sequential integer IDs?
+8. Why a strategy pattern?
