@@ -8,41 +8,47 @@ from lxml import etree
 
 from organizations.parsers.strategies.general import XMLParserStrategy
 
+from .errors import StrategyCannotHandleXMLContentError
+
 
 class IRS990Strategy(XMLParserStrategy):
     """Strategy for parsing IRS Form 990 XML files."""
 
     IRS_NAMESPACE = "http://www.irs.gov/efile"
 
-    def can_handle(self, xml_content: bytes) -> bool:
-        """
-        Check if this is an IRS Form 990 XML file.
-
-        Args:
-            xml_content: Raw XML bytes
-
-        Returns:
-            True if this appears to be IRS Form 990 XML
-        """
+    def can_handle(self) -> bool:
+        """Check if this is an IRS Form 990 XML file."""
         try:
-            root = etree.fromstring(xml_content)
-
-            # Check for IRS namespace
-            if root.nsmap:
-                namespaces = root.nsmap.values()
-                if any(self.IRS_NAMESPACE in ns for ns in namespaces):
-                    return True
-
-            # Check for common IRS 990 root elements
-            root_tag = root.tag.lower()
-            if "return" in root_tag or "irs990" in root_tag:
-                return True
-
-            return False
-        except Exception:
+            root = etree.fromstring(self.xml_content)
+            self._validate_has_irs_namespace(root)
+            self._validate_has_irs_990_root_elements(root)
+            self._validate_has_correct_return_type(root)
+            return True
+        except StrategyCannotHandleXMLContentError:
             return False
 
-    def parse(self, xml_content: bytes) -> dict[str, Any]:
+    def _validate_has_irs_namespace(self, root: etree.Element) -> None:
+        """Check if the XML content has the IRS namespace."""
+        if root.nsmap:
+            namespaces = root.nsmap.values()
+            if any(self.IRS_NAMESPACE in ns for ns in namespaces):
+                return
+        self._raise_cannot_handle_error()
+
+    def _validate_has_irs_990_root_elements(self, root: etree.Element) -> None:
+        """Check if the XML content has the IRS 990 root elements."""
+        root_tag = root.tag.lower()
+        if "return" in root_tag or "irs990" in root_tag:
+            return
+        self._raise_cannot_handle_error()
+
+    def _validate_has_correct_return_type(self, root: etree.Element) -> None:
+        """Check if the XML content has the correct return type."""
+        return_type = root.find(".//irs:ReturnHeader/irs:ReturnTypeCd", namespaces={"irs": self.IRS_NAMESPACE})
+        if return_type is None or return_type.text.lower() != "990":
+            self._raise_cannot_handle_error()
+
+    def parse(self) -> dict[str, Any]:
         """
         Parse an IRS Form 990 XML file and extract organization and return information.
 
@@ -56,7 +62,7 @@ class IRS990Strategy(XMLParserStrategy):
               employee_count, total_revenue, total_expenses, total_assets
         """
         # Parse XML with namespace support
-        root = etree.fromstring(xml_content)
+        root = etree.fromstring(self.xml_content)
 
         # IRS Form 990 XML typically uses this namespace
         ns = {"irs": self.IRS_NAMESPACE}

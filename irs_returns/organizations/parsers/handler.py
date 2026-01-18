@@ -22,25 +22,29 @@ class XMLParser:
         # "IRS990EZ": IRS990EZStrategy,
     }
 
-    def __init__(self):
+    def __init__(self, xml_content: bytes):
+        self.xml_content = xml_content
         self.strategy_instances = {
-            strategy_name: strategy_class() for strategy_name, strategy_class in self.STRATEGY_CLASSES.items()
+            strategy_name: strategy_class(self.xml_content)
+            for strategy_name, strategy_class in self.STRATEGY_CLASSES.items()
         }
 
-    def _select_strategy(self, xml_content: bytes) -> tuple[str, XMLParserStrategy]:
+    def _select_strategy(self) -> tuple[str, XMLParserStrategy]:
         xml_content_str = (
-            xml_content.decode("utf-8")[:50] + "..." if len(xml_content) > 50 else xml_content.decode("utf-8")
+            self.xml_content.decode("utf-8")[:50] + "..."
+            if len(self.xml_content) > 50
+            else self.xml_content.decode("utf-8")
         )
         logger.debug(f"Selecting strategy for XML content: {xml_content_str}...")
         for strategy_name, strategy in self.strategy_instances.items():
             logger.debug(f"Checking if {strategy_name} can handle XML content...")
-            if strategy.can_handle(xml_content):
+            if strategy.can_handle():
                 logger.debug(f"Selected {strategy_name} strategy.")
                 return strategy_name, strategy
         logger.error(f"No strategy found for XML content: {xml_content_str}")
-        raise NoStrategyFoundError(xml_content, available_strategies=list(self.strategy_instances.keys()))
+        raise NoStrategyFoundError(self.xml_content, available_strategies=list(self.strategy_instances.keys()))
 
-    def validate_xml(self, xml_content: bytes) -> None:
+    def _validate_xml(self) -> None:
         """
         Check if the XML content is valid and well-formed.
 
@@ -51,17 +55,17 @@ class XMLParser:
             etree.XMLSyntaxError: If the XML content is not valid XML or not well-formed.
         """
         try:
-            etree.fromstring(xml_content)
+            etree.fromstring(self.xml_content)
         except etree.XMLSyntaxError as e:
             logger.error("XML content is not valid XML or not well-formed.")
             raise e
 
-    def parse(self, xml_content: bytes) -> dict[str, Any]:
+    def parse(self) -> dict[str, Any]:
         """
         Parse XML content using appropriate handler.
 
         Args:
-            xml_content: Raw XML bytes
+            None
 
         Returns:
             Dictionary with strategy_name used and data parsed from the XML content.
@@ -70,10 +74,10 @@ class XMLParser:
             NoStrategyFoundError: If no suitable handler is found for the given XML content.
             etree.XMLSyntaxError: If the XML content is not valid XML or not well-formed.
         """
-        self.validate_xml(xml_content)
-        strategy_name, strategy = self._select_strategy(xml_content)
+        self._validate_xml()
+        strategy_name, strategy = self._select_strategy()
         logger.info(f"Using {strategy_name} handler to parse XML content.")
         return {
             "strategy_name": strategy_name,
-            "data": strategy.parse(xml_content),
+            "data": strategy.parse(),
         }
