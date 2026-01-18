@@ -1,12 +1,7 @@
 {
   "python.testing.unittestEnabled": true,
   "editor.formatOnSave": true,
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.codeActionsOnSave": {
@@ -17,4 +12,5 @@
   "ruff.nativeServer": "on",
   "ruff.fixAll": true,
   "ruff.organizeImports": true,
+  "css.customData": [".vscode/tailwind.json"]
 }
