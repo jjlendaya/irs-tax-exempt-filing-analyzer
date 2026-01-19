@@ -20,6 +20,7 @@ dependencies = [
     "redis (>=5.2.0,<6.0.0)",
     "requests (>=2.32.0,<3.0.0)",
     "lxml (>=5.3.0,<6.0.0)",
+    "django-cors-headers (>=4.9.0,<5.0.0)",
 ]
 
 
