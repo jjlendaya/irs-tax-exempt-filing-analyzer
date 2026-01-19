@@ -127,6 +127,8 @@ You may set `-l` to `DEBUG` if you need more verbosity in the messages.
 npm run dev
 ```
 
+You're done! **Visit http://localhost:5174** to see the app.
+
 # General Information
 
 To make requests to the API, you can use an app like Postman or just use cURL. I recommend using Postman so you can easily introspect the response as it formats it for you.
