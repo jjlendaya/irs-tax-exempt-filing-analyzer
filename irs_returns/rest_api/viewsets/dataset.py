@@ -1,6 +1,6 @@
 from rest_framework import serializers, status, viewsets
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework_api_key.permissions import HasAPIKey
 
 from organizations.models import DatasetJob
 from organizations.tasks import process_dataset_task
@@ -12,7 +12,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
 
     queryset = DatasetJob.objects.all()
     serializer_class = DatasetJobSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [HasAPIKey]
     lookup_field = "id"
 
     def create(self, request, *args, **kwargs):
