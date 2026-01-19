@@ -134,7 +134,7 @@ class IRS990Strategy(XMLParserStrategy):
             try:
                 return_data["tax_period_start_date"] = self._parse_datetime(tax_period_start_elem[0].text)
             except (ValueError, TypeError):
-                logger.error(f"Error parsing tax period start date: {tax_period_start_elem[0].text}")
+                logger.debug(f"Error parsing tax period start date: {tax_period_start_elem[0].text}", exc_info=True)
                 pass
 
         tax_period_end_elem = root.xpath(".//irs:ReturnHeader/irs:TaxPeriodEndDt", namespaces=ns)
@@ -142,7 +142,7 @@ class IRS990Strategy(XMLParserStrategy):
             try:
                 return_data["tax_period_end_date"] = self._parse_datetime(tax_period_end_elem[0].text)
             except (ValueError, TypeError):
-                logger.error(f"Error parsing tax period end date: {tax_period_end_elem[0].text}")
+                logger.debug(f"Error parsing tax period end date: {tax_period_end_elem[0].text}", exc_info=True)
                 pass
 
         # Extract filed date
@@ -151,7 +151,7 @@ class IRS990Strategy(XMLParserStrategy):
             try:
                 return_data["filed_on"] = self._parse_datetime(filed_date_elem[0].text)
             except (ValueError, TypeError):
-                logger.error(f"Error parsing filed date: {filed_date_elem[0].text}")
+                logger.debug(f"Error parsing filed date: {filed_date_elem[0].text}", exc_info=True)
                 pass
 
         # Extract employee count
@@ -160,7 +160,16 @@ class IRS990Strategy(XMLParserStrategy):
             try:
                 return_data["employee_count"] = int(employee_elem[0].text)
             except (ValueError, TypeError):
-                logger.error(f"Error parsing employee count: {employee_elem[0].text}")
+                logger.debug(f"Error parsing employee count: {employee_elem[0].text}", exc_info=True)
+                pass
+
+        # Extract previous year employee count
+        py_employee_elem = root.xpath(".//irs:PYTotalEmployeeCnt", namespaces=ns)
+        if py_employee_elem and py_employee_elem[0].text:
+            try:
+                return_data["py_employee_count"] = int(py_employee_elem[0].text)
+            except (ValueError, TypeError):
+                logger.debug(f"Error parsing previous year employee count: {py_employee_elem[0].text}", exc_info=True)
                 pass
 
         # Extract total revenue
@@ -169,7 +178,18 @@ class IRS990Strategy(XMLParserStrategy):
             try:
                 return_data["total_revenue"] = self._parse_decimal(revenue_elem[0].text)
             except (ValueError, TypeError):
-                logger.error(f"Error parsing total revenue: {revenue_elem[0].text}")
+                logger.debug(f"Error parsing total revenue: {revenue_elem[0].text}", exc_info=True)
+                pass
+
+        # Extract previous year total revenue
+
+        # Extract previous year total revenue
+        py_revenue_elem = root.xpath(".//irs:PYTotalRevenueAmt", namespaces=ns)
+        if py_revenue_elem and py_revenue_elem[0].text:
+            try:
+                return_data["py_total_revenue"] = self._parse_decimal(py_revenue_elem[0].text)
+            except (ValueError, TypeError):
+                logger.debug(f"Error parsing previous year total revenue: {py_revenue_elem[0].text}", exc_info=True)
                 pass
 
         # Extract total expenses
@@ -178,16 +198,52 @@ class IRS990Strategy(XMLParserStrategy):
             try:
                 return_data["total_expenses"] = self._parse_decimal(expense_elem[0].text)
             except (ValueError, TypeError):
-                logger.error(f"Error parsing total expenses: {expense_elem[0].text}")
+                logger.debug(f"Error parsing total expenses: {expense_elem[0].text}", exc_info=True)
+                pass
+
+        # Extract previous year total expenses
+        py_expense_elem = root.xpath(".//irs:PYTotalExpensesAmt", namespaces=ns)
+        if py_expense_elem and py_expense_elem[0].text:
+            try:
+                return_data["py_total_expenses"] = self._parse_decimal(py_expense_elem[0].text)
+            except (ValueError, TypeError):
+                logger.debug(f"Error parsing previous year total expenses: {py_expense_elem[0].text}", exc_info=True)
                 pass
 
         # Extract total assets EOY
         asset_elem = root.xpath(".//irs:TotalAssetsEOYAmt", namespaces=ns)
         if asset_elem and asset_elem[0].text:
             try:
-                return_data["total_assets"] = self._parse_decimal(asset_elem[0].text)
+                return_data["total_assets_eoy"] = self._parse_decimal(asset_elem[0].text)
             except (ValueError, TypeError):
-                logger.error(f"Error parsing total assets: {asset_elem[0].text}")
+                logger.debug(f"Error parsing total assets EOY: {asset_elem[0].text}", exc_info=True)
+                pass
+
+        # Extract total assets BOY
+        asset_boy_elem = root.xpath(".//irs:TotalAssetsBOYAmt", namespaces=ns)
+        if asset_boy_elem and asset_boy_elem[0].text:
+            try:
+                return_data["total_assets_boy"] = self._parse_decimal(asset_boy_elem[0].text)
+            except (ValueError, TypeError):
+                logger.debug(f"Error parsing total assets BOY: {asset_boy_elem[0].text}", exc_info=True)
+                pass
+
+        # Extract total liabilities EOY
+        liability_eoy_elem = root.xpath(".//irs:TotalLiabilitiesEOYAmt", namespaces=ns)
+        if liability_eoy_elem and liability_eoy_elem[0].text:
+            try:
+                return_data["total_liabilities_eoy"] = self._parse_decimal(liability_eoy_elem[0].text)
+            except (ValueError, TypeError):
+                logger.debug(f"Error parsing total liabilities EOY: {liability_eoy_elem[0].text}", exc_info=True)
+                pass
+
+        # Extract total liabilities BOY
+        liability_boy_elem = root.xpath(".//irs:TotalLiabilitiesBOYAmt", namespaces=ns)
+        if liability_boy_elem and liability_boy_elem[0].text:
+            try:
+                return_data["total_liabilities_boy"] = self._parse_decimal(liability_boy_elem[0].text)
+            except (ValueError, TypeError):
+                logger.debug(f"Error parsing total liabilities BOY: {liability_boy_elem[0].text}", exc_info=True)
                 pass
 
         return return_data
