@@ -15,7 +15,14 @@ class OrganizationReturnInformation(UUIDAbstractModel, TimestampedAbstractModel)
     tax_period_start_date = models.DateField()
     tax_period_end_date = models.DateField()
     employee_count = models.IntegerField(null=True, blank=True)
+    py_employee_count = models.IntegerField(null=True, blank=True)
     total_revenue = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    py_total_revenue = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         null=True,
@@ -27,7 +34,31 @@ class OrganizationReturnInformation(UUIDAbstractModel, TimestampedAbstractModel)
         null=True,
         blank=True,
     )
-    total_assets = models.DecimalField(
+    py_total_expenses = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    total_assets_eoy = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    total_assets_boy = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    total_liabilities_eoy = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    total_liabilities_boy = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         null=True,
