@@ -1,9 +1,9 @@
 """Celery tasks for processing dataset ZIP files."""
 
+import logging
 from pathlib import Path
 import shutil
 import tempfile
-from uuid import UUID
 import zipfile
 
 from celery import shared_task
@@ -11,6 +11,8 @@ import requests
 
 from organizations.datasets import process_dataset
 from organizations.models import DatasetJob
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task(bind=True, max_retries=3, time_limit=3600, soft_time_limit=3300)
@@ -21,7 +23,12 @@ def process_dataset_task(self, job_id: str):
     Args:
         job_id: UUID of the DatasetJob to process
     """
-    job = DatasetJob.objects.get(id=UUID(job_id))
+    try:
+        job = DatasetJob.objects.get(id=job_id)
+    except DatasetJob.DoesNotExist as e:
+        logger.error(f"DatasetJob with ID {job_id} does not exist. Task will be retried.")
+        raise self.retry(countdown=10, max_retries=3, exc=e)
+
     temp_dir = None
 
     try:
