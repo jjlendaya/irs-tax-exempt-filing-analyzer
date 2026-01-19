@@ -1,9 +1,19 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Link } from "@tanstack/react-router";
-import type { Company } from "@/types/api";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import type { Company, OrganizationReturn } from "@/types/api";
+import { formatDate } from "@/lib/utils";
 import { SortableHeader } from "@/components/tables/SortableHeader";
 import { compareAsc } from "date-fns";
+import { DEFAULT_NULL_VALUE } from "@/lib/constants";
+import { NumberRowWithDelta } from "./NumberRowWithDelta";
+
+const getLatestReturn = (company: Company): OrganizationReturn | null => {
+  if (!company.returns || company.returns.length === 0) return null;
+
+  return company.returns.reduce((prev, current) =>
+    new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+  );
+};
 
 export const columns: ColumnDef<Company>[] = [
   {
@@ -80,10 +90,7 @@ export const columns: ColumnDef<Company>[] = [
   },
   {
     id: "totalRevenue",
-    accessorFn: (row) =>
-      row.returns.reduce((prev, current) =>
-        new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
-      ).totalRevenue || "0",
+    accessorFn: (row) => getLatestReturn(row),
     header: ({ column }) => {
       return (
         <SortableHeader
@@ -94,8 +101,18 @@ export const columns: ColumnDef<Company>[] = [
       );
     },
     cell: ({ getValue }) => {
+      const latestReturn = getValue() as OrganizationReturn | null;
+      if (!latestReturn) {
+        return <div className="text-right">{DEFAULT_NULL_VALUE}</div>;
+      }
+
       return (
-        <div className="text-right">{formatCurrency(getValue() as string)}</div>
+        <NumberRowWithDelta
+          currentKey="totalRevenue"
+          previousKey="pyTotalRevenue"
+          returnValue={latestReturn}
+          isCurrency
+        />
       );
     },
     sortingFn: (rowA, rowB) => {
@@ -112,10 +129,7 @@ export const columns: ColumnDef<Company>[] = [
   },
   {
     id: "totalExpenses",
-    accessorFn: (row) =>
-      row.returns.reduce((prev, current) =>
-        new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
-      ).totalExpenses || "0",
+    accessorFn: (row) => getLatestReturn(row),
     header: ({ column }) => {
       return (
         <SortableHeader
@@ -126,8 +140,18 @@ export const columns: ColumnDef<Company>[] = [
       );
     },
     cell: ({ getValue }) => {
+      const latestReturn = getValue() as OrganizationReturn | null;
+      if (!latestReturn) {
+        return <div className="text-right">{DEFAULT_NULL_VALUE}</div>;
+      }
+
       return (
-        <div className="text-right">{formatCurrency(getValue() as string)}</div>
+        <NumberRowWithDelta
+          currentKey="totalExpenses"
+          previousKey="pyTotalExpenses"
+          returnValue={latestReturn}
+          isCurrency
+        />
       );
     },
     sortingFn: (rowA, rowB) => {
@@ -146,16 +170,23 @@ export const columns: ColumnDef<Company>[] = [
   },
   {
     id: "totalAssetsEoy",
-    accessorFn: (row) =>
-      row.returns.reduce((prev, current) =>
-        new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
-      ).totalAssetsEoy || "0",
+    accessorFn: (row) => getLatestReturn(row),
     header: ({ column }) => {
       return <SortableHeader column={column} children="End of Year Assets" />;
     },
     cell: ({ getValue }) => {
+      const latestReturn = getValue() as OrganizationReturn | null;
+      if (!latestReturn) {
+        return <div className="text-right">{DEFAULT_NULL_VALUE}</div>;
+      }
+
       return (
-        <div className="text-right">{formatCurrency(getValue() as string)}</div>
+        <NumberRowWithDelta
+          currentKey="totalAssetsEoy"
+          previousKey="totalAssetsBoy"
+          returnValue={latestReturn}
+          isCurrency
+        />
       );
     },
     sortingFn: (rowA, rowB) => {
@@ -174,10 +205,7 @@ export const columns: ColumnDef<Company>[] = [
   },
   {
     id: "employeeCount",
-    accessorFn: (row) =>
-      row.returns.reduce((prev, current) =>
-        new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
-      ).employeeCount ?? 0,
+    accessorFn: (row) => getLatestReturn(row),
     header: ({ column }) => {
       return (
         <SortableHeader
@@ -188,10 +216,17 @@ export const columns: ColumnDef<Company>[] = [
       );
     },
     cell: ({ getValue }) => {
+      const latestReturn = getValue() as OrganizationReturn | null;
+      if (!latestReturn) {
+        return <div className="text-right">{DEFAULT_NULL_VALUE}</div>;
+      }
+
       return (
-        <div className="text-center">
-          {(getValue() as number | null) ?? "N/A"}
-        </div>
+        <NumberRowWithDelta
+          currentKey="employeeCount"
+          previousKey="pyEmployeeCount"
+          returnValue={latestReturn}
+        />
       );
     },
     sortingFn: (rowA, rowB) => {

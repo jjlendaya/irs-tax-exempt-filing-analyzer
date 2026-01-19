@@ -6,10 +6,12 @@ export const Delta = ({
   currentValue,
   previousValue,
   isCurrency = false,
+  tooltipSide = "top",
 }: {
   currentValue: string | number | null;
   previousValue?: string | number | null;
   isCurrency?: boolean;
+  tooltipSide?: "top" | "bottom" | "left" | "right";
 }) => {
   const { delta, deltaPercentage } = calculateDelta(
     currentValue,
@@ -47,7 +49,7 @@ export const Delta = ({
               : DEFAULT_NULL_VALUE}
           </p>
         </TooltipTrigger>
-        <TooltipContent>
+        <TooltipContent side={tooltipSide}>
           <p className="text-xs">
             {noDelta ? (
               <span className="font-bold">
