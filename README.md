@@ -127,7 +127,7 @@ You may set `-l` to `DEBUG` if you need more verbosity in the messages.
 npm run dev
 ```
 
-You're done! **Visit http://localhost:5174** to see the app. When making API requests, those should be directed to `http://localhost:8000/api/<route>`
+You're done! **Visit http://localhost:5173** to see the app. When making API requests, those should be directed to `http://localhost:8000/api/<route>`
 
 # General Information
 
@@ -135,7 +135,7 @@ To make requests to the API, you can use an app like Postman or just use cURL. I
 
 **Endpoints:**
 
-API requests should be directed to `http://localhost:8000/api/<route>`. That is the backend server's address. The app with its UI, on the other hand, is located in http://localhost:5174.
+API requests should be directed to `http://localhost:8000/api/<route>`. That is the backend server's address. The app with its UI, on the other hand, is located in http://localhost:5173.
 
 1. GET localhost:8000/companies (public)
 2. GET localhost:8000/companies/<:uuid> (public)
