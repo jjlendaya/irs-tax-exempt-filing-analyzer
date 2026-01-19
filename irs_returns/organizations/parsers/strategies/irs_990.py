@@ -1,7 +1,8 @@
 """IRS Form 990 XML parsing strategy."""
 
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
+import logging
 from typing import Any
 
 from lxml import etree
@@ -9,6 +10,8 @@ from lxml import etree
 from organizations.parsers.strategies.general import XMLParserStrategy
 
 from .errors import StrategyCannotHandleXMLContentError
+
+logger = logging.getLogger(__name__)
 
 
 class IRS990Strategy(XMLParserStrategy):
@@ -93,51 +96,23 @@ class IRS990Strategy(XMLParserStrategy):
         }
 
         # Try various XPath patterns for organization name
-        name_paths = [
-            ".//irs:BusinessName/irs:BusinessNameLine1Txt",
-            ".//irs:BusinessNameLine1Txt",
-            ".//irs:NameBusiness/BusinessNameLine1Txt",
-            ".//irs:OrganizationName/irs:BusinessNameLine1Txt",
-        ]
-        for path in name_paths:
-            name_elem = root.xpath(path, namespaces=ns)
-            if name_elem and name_elem[0].text:
-                org_data["name"] = name_elem[0].text.strip()
-                break
-
-        # If no name found, try alternative patterns
-        if not org_data["name"]:
-            name_elem = root.xpath(".//irs:BusinessName", namespaces=ns)
-            if name_elem and name_elem[0].text:
-                org_data["name"] = name_elem[0].text.strip()
+        name_elem = root.xpath(".//irs:Filer/irs:BusinessName/irs:BusinessNameLine1Txt", namespaces=ns)
+        if name_elem and name_elem[0].text:
+            org_data["name"] = name_elem[0].text.strip()
 
         # Try to find website URL
-        website_paths = [
-            ".//irs:WebsiteAddressTxt",
-            ".//irs:WebsiteAddress",
-            ".//irs:WebSite",
-        ]
-        for path in website_paths:
-            website_elem = root.xpath(path, namespaces=ns)
-            if website_elem and website_elem[0].text:
-                url = website_elem[0].text.strip()
-                # Ensure URL has protocol
-                if url and not url.startswith(("http://", "https://")):
-                    url = f"https://{url}"
-                org_data["website_url"] = url
-                break
+        website_elem = root.xpath(".//irs:WebsiteAddressTxt", namespaces=ns)
+        if website_elem and website_elem[0].text:
+            url = website_elem[0].text.strip().lower()
+            # Ensure URL has protocol
+            if url and not url.startswith(("http://", "https://")):
+                url = f"https://{url}"
+            org_data["website_url"] = url
 
         # Try to find mission description
-        mission_paths = [
-            ".//irs:ActivityOrMissionDesc",
-            ".//irs:MissionDesc",
-            ".//irs:PrimaryExemptPurposeTxt",
-        ]
-        for path in mission_paths:
-            mission_elem = root.xpath(path, namespaces=ns)
-            if mission_elem and mission_elem[0].text:
-                org_data["mission_description"] = mission_elem[0].text.strip()
-                break
+        mission_elem = root.xpath(".//irs:ActivityOrMissionDesc", namespaces=ns)
+        if mission_elem and mission_elem[0].text:
+            org_data["mission_description"] = mission_elem[0].text.strip().capitalize()
 
         return org_data
 
@@ -154,104 +129,71 @@ class IRS990Strategy(XMLParserStrategy):
         }
 
         # Extract tax period dates
-        tax_period_start_paths = [
-            ".//irs:TaxPeriodBeginDt",
-            ".//irs:TaxPeriodStartDt",
-            ".//irs:TaxYearBeginDt",
-        ]
-        for path in tax_period_start_paths:
-            elem = root.xpath(path, namespaces=ns)
-            if elem and elem[0].text:
-                return_data["tax_period_start_date"] = self._parse_date(elem[0].text)
-                break
+        tax_period_start_elem = root.xpath(".//irs:ReturnHeader/irs:TaxPeriodBeginDt", namespaces=ns)
+        if tax_period_start_elem and tax_period_start_elem[0].text:
+            try:
+                return_data["tax_period_start_date"] = self._parse_datetime(tax_period_start_elem[0].text)
+            except (ValueError, TypeError):
+                logger.error(f"Error parsing tax period start date: {tax_period_start_elem[0].text}")
+                pass
 
-        tax_period_end_paths = [
-            ".//irs:TaxPeriodEndDt",
-            ".//irs:TaxYearEndDt",
-        ]
-        for path in tax_period_end_paths:
-            elem = root.xpath(path, namespaces=ns)
-            if elem and elem[0].text:
-                return_data["tax_period_end_date"] = self._parse_date(elem[0].text)
-                break
+        tax_period_end_elem = root.xpath(".//irs:ReturnHeader/irs:TaxPeriodEndDt", namespaces=ns)
+        if tax_period_end_elem and tax_period_end_elem[0].text:
+            try:
+                return_data["tax_period_end_date"] = self._parse_datetime(tax_period_end_elem[0].text)
+            except (ValueError, TypeError):
+                logger.error(f"Error parsing tax period end date: {tax_period_end_elem[0].text}")
+                pass
 
         # Extract filed date
-        filed_date_paths = [
-            ".//irs:ReturnTs",
-            ".//irs:DateOfFiling",
-            ".//irs:FilingDate",
-        ]
-        for path in filed_date_paths:
-            elem = root.xpath(path, namespaces=ns)
-            if elem and elem[0].text:
-                return_data["filed_on"] = self._parse_date(elem[0].text)
-                break
+        filed_date_elem = root.xpath(".//irs:ReturnHeader/irs:ReturnTs", namespaces=ns)
+        if filed_date_elem and filed_date_elem[0].text:
+            try:
+                return_data["filed_on"] = self._parse_datetime(filed_date_elem[0].text)
+            except (ValueError, TypeError):
+                logger.error(f"Error parsing filed date: {filed_date_elem[0].text}")
+                pass
 
         # Extract employee count
-        employee_paths = [
-            ".//irs:TotalEmployeeCnt",
-            ".//irs:EmployeeCnt",
-            ".//irs:NumEmployees",
-        ]
-        for path in employee_paths:
-            elem = root.xpath(path, namespaces=ns)
-            if elem and elem[0].text:
-                try:
-                    return_data["employee_count"] = int(float(elem[0].text))
-                except (ValueError, TypeError):
-                    pass
-                break
+        employee_elem = root.xpath(".//irs:TotalEmployeeCnt", namespaces=ns)
+        if employee_elem and employee_elem[0].text:
+            try:
+                return_data["employee_count"] = int(employee_elem[0].text)
+            except (ValueError, TypeError):
+                logger.error(f"Error parsing employee count: {employee_elem[0].text}")
+                pass
 
         # Extract total revenue
-        revenue_paths = [
-            ".//irs:TotalRevenueColumnA",
-            ".//irs:TotalRevenue",
-            ".//irs:GrossReceipts",
-            ".//irs:TotalGrossReceipts",
-        ]
-        for path in revenue_paths:
-            elem = root.xpath(path, namespaces=ns)
-            if elem and elem[0].text:
-                try:
-                    return_data["total_revenue"] = self._parse_decimal(elem[0].text)
-                except (ValueError, TypeError):
-                    pass
-                break
+        revenue_elem = root.xpath(".//irs:CYTotalRevenueAmt", namespaces=ns)
+        if revenue_elem and revenue_elem[0].text:
+            try:
+                return_data["total_revenue"] = self._parse_decimal(revenue_elem[0].text)
+            except (ValueError, TypeError):
+                logger.error(f"Error parsing total revenue: {revenue_elem[0].text}")
+                pass
 
         # Extract total expenses
-        expense_paths = [
-            ".//irs:TotalExpensesColumnA",
-            ".//irs:TotalExpenses",
-            ".//irs:TotalExpensesAmt",
-        ]
-        for path in expense_paths:
-            elem = root.xpath(path, namespaces=ns)
-            if elem and elem[0].text:
-                try:
-                    return_data["total_expenses"] = self._parse_decimal(elem[0].text)
-                except (ValueError, TypeError):
-                    pass
-                break
+        expense_elem = root.xpath(".//irs:CYTotalExpensesAmt", namespaces=ns)
+        if expense_elem and expense_elem[0].text:
+            try:
+                return_data["total_expenses"] = self._parse_decimal(expense_elem[0].text)
+            except (ValueError, TypeError):
+                logger.error(f"Error parsing total expenses: {expense_elem[0].text}")
+                pass
 
-        # Extract total assets
-        asset_paths = [
-            ".//irs:TotalAssetsEOYAmt",
-            ".//irs:TotalAssets",
-            ".//irs:TotalAssetsEndOfYear",
-        ]
-        for path in asset_paths:
-            elem = root.xpath(path, namespaces=ns)
-            if elem and elem[0].text:
-                try:
-                    return_data["total_assets"] = self._parse_decimal(elem[0].text)
-                except (ValueError, TypeError):
-                    pass
-                break
+        # Extract total assets EOY
+        asset_elem = root.xpath(".//irs:TotalAssetsEOYAmt", namespaces=ns)
+        if asset_elem and asset_elem[0].text:
+            try:
+                return_data["total_assets"] = self._parse_decimal(asset_elem[0].text)
+            except (ValueError, TypeError):
+                logger.error(f"Error parsing total assets: {asset_elem[0].text}")
+                pass
 
         return return_data
 
-    def _parse_date(self, date_str: str | None) -> date | None:
-        """Parse date string in various formats to date object."""
+    def _parse_datetime(self, date_str: str | None) -> datetime | None:
+        """Parse date string in various formats to datetime object."""
         if not date_str:
             return None
 
@@ -263,11 +205,13 @@ class IRS990Strategy(XMLParserStrategy):
             "%m/%d/%Y",
             "%d/%m/%Y",
             "%Y%m%d",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S%z",
         ]
 
         for fmt in date_formats:
             try:
-                return datetime.strptime(date_str, fmt).date()
+                return datetime.strptime(date_str, fmt)
             except ValueError:
                 continue
 
