@@ -89,7 +89,7 @@ cp .env.example .env
 
 8. Set up an API key by going to `localhost:8000/admin/`. Log in with the user you created in step 6. On the page that appears, click on the "+ Add" button beside "API Key Permissions" > "Api Keys". Fill up the form. Once it's saved, you will be redirected back to the list page _with your API key listed at the top. You MUST copy this now or else you'll never see it again._
 
-9. In another terminal, activate the virtual environment again and run `celery`. This runs the downloading and parsing of ZIP files in an asynchronous task as this process can take a while.
+9. Make sure your Redis server is running and is accessible through `localhost:6379`. Once it's running, open another terminal, activate the virtual environment again and run `celery`. This runs the downloading and parsing of ZIP files in an asynchronous task as this process can take a while.
 
 ```zsh
 # In another terminal
