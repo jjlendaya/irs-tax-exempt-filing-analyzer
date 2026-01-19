@@ -9,5 +9,5 @@ class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet for companies endpoint combining Organization with related returns."""
 
     permission_classes = [AllowAny]
-    queryset = Organization.objects.prefetch_related("returns").all()
+    queryset = Organization.objects.prefetch_related("returns").all().order_by("name")
     serializer_class = CompanySerializer
