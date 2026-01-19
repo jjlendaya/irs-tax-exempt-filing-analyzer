@@ -3,7 +3,6 @@ import { ArrowUpDown } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { Company } from "@/types/api";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 export const columns: ColumnDef<Company>[] = [
@@ -48,6 +47,26 @@ export const columns: ColumnDef<Company>[] = [
       );
 
       return <span>{formatDate(latest.filedOn)}</span>;
+    },
+  },
+  {
+    id: "websiteUrl",
+    header: "Website",
+    cell: ({ row }) => {
+      const company = row.original;
+      return (
+        <a href={company.websiteUrl} target="_blank" rel="noopener noreferrer">
+          {company.websiteUrl}
+        </a>
+      );
+    },
+  },
+  {
+    id: "missionDescription",
+    header: "Mission",
+    cell: ({ row }) => {
+      const company = row.original;
+      return <span>{company.missionDescription}</span>;
     },
   },
   {
@@ -104,6 +123,24 @@ export const columns: ColumnDef<Company>[] = [
     },
   },
   {
+    id: "totalAssetsEoy",
+    header: "Assets",
+    cell: ({ row }) => {
+      const returns = row.original.returns;
+      if (!returns || returns.length === 0) return "N/A";
+
+      const latest = returns.reduce((prev, current) =>
+        new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+      );
+
+      return (
+        <div className="text-right">
+          {formatCurrency(latest.totalAssetsEoy)}
+        </div>
+      );
+    },
+  },
+  {
     id: "employeeCount",
     header: "Employees",
     cell: ({ row }) => {
@@ -115,18 +152,6 @@ export const columns: ColumnDef<Company>[] = [
       );
 
       return <div className="text-center">{latest.employeeCount ?? "N/A"}</div>;
-    },
-  },
-  {
-    id: "returnsCount",
-    header: "Filings",
-    cell: ({ row }) => {
-      const count = row.original.returns?.length || 0;
-      return (
-        <Badge variant={count > 0 ? "default" : "secondary"}>
-          {count} {count === 1 ? "filing" : "filings"}
-        </Badge>
-      );
     },
   },
 ];
