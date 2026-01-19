@@ -37,10 +37,7 @@ export const columns: ColumnDef<Company>[] = [
   },
   {
     id: "latestFiling",
-    accessorFn: (row) =>
-      row.returns.reduce((prev, current) =>
-        new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
-      ).filedOn || null,
+    accessorFn: (row) => row,
     header: ({ column }) => {
       return <SortableHeader column={column} children="Latest Filing" />;
     },

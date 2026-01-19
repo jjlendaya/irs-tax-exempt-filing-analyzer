@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -18,11 +18,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { columns } from "./CompanyTableColumns";
 import { useCompanies } from "@/hooks/queries/useCompanies";
+import { DebouncedInput } from "@/components/DebouncedInput";
 
 export function CompanyTable() {
   "use no memo";
@@ -40,9 +40,14 @@ export function CompanyTable() {
 
   const { data: companies, isLoading, isError, error } = useCompanies();
 
+  const filteredCompanies = useMemo(
+    () => companies?.filter((company) => company.returns.length > 0) || [],
+    [companies]
+  );
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: companies || [],
+    data: filteredCompanies,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -74,10 +79,10 @@ export function CompanyTable() {
     <div className="space-y-4">
       {/* Search Input */}
       <div className="flex items-center justify-between">
-        <Input
+        <DebouncedInput
           placeholder="Search organizations..."
           value={globalFilter ?? ""}
-          onChange={(e) => setGlobalFilter(e.target.value)}
+          onChange={setGlobalFilter}
           className="max-w-sm bg-white"
         />
         <div className="text-sm text-muted-foreground">
@@ -107,7 +112,7 @@ export function CompanyTable() {
           <TableBody>
             {isLoading ? (
               // Loading skeleton
-              Array.from({ length: 5 }).map((_, index) => (
+              Array.from({ length: 20 }).map((_, index) => (
                 <TableRow key={index}>
                   {columns.map((_, cellIndex) => (
                     <TableCell key={cellIndex}>
