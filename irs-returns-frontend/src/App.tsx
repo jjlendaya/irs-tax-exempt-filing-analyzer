@@ -3,6 +3,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { queryClient } from "./lib/queryClient";
 import { routeTree } from "./routes/routeTree.gen";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 
 const router = createRouter({
   routeTree,
@@ -20,7 +21,9 @@ declare module "@tanstack/react-router" {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <TooltipProvider>
+        <RouterProvider router={router} />
+      </TooltipProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

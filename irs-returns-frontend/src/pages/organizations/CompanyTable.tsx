@@ -71,7 +71,7 @@ export function CompanyTable() {
           placeholder="Search organizations..."
           value={globalFilter ?? ""}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="max-w-sm"
+          className="max-w-sm bg-white"
         />
         <div className="text-sm text-muted-foreground">
           {isLoading ? "Loading..." : `${companies?.length || 0} organizations`}
@@ -79,7 +79,7 @@ export function CompanyTable() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-white">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
