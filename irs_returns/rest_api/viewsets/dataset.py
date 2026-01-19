@@ -1,4 +1,5 @@
-from rest_framework import status, viewsets
+from rest_framework import serializers, status, viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from organizations.models import DatasetJob
@@ -11,6 +12,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
 
     queryset = DatasetJob.objects.all()
     serializer_class = DatasetJobSerializer
+    permission_classes = [AllowAny]
     lookup_field = "id"
 
     def create(self, request, *args, **kwargs):
@@ -21,7 +23,10 @@ class DatasetViewSet(viewsets.ModelViewSet):
         Body: {"zip_url": "https://example.com/data.zip"}
         """
         create_serializer = DatasetJobCreateSerializer(data=request.data)
-        create_serializer.is_valid(raise_exception=True)
+        try:
+            create_serializer.is_valid(raise_exception=True)
+        except serializers.ValidationError as e:
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
         # Create the job
         job = DatasetJob.objects.create(

@@ -17,49 +17,49 @@ class OrganizationReturnInformation(UUIDAbstractModel, TimestampedAbstractModel)
     employee_count = models.IntegerField(null=True, blank=True)
     py_employee_count = models.IntegerField(null=True, blank=True)
     total_revenue = models.DecimalField(
-        max_digits=12,
+        max_digits=14,
         decimal_places=2,
         null=True,
         blank=True,
     )
     py_total_revenue = models.DecimalField(
-        max_digits=12,
+        max_digits=14,
         decimal_places=2,
         null=True,
         blank=True,
     )
     total_expenses = models.DecimalField(
-        max_digits=12,
+        max_digits=14,
         decimal_places=2,
         null=True,
         blank=True,
     )
     py_total_expenses = models.DecimalField(
-        max_digits=12,
+        max_digits=14,
         decimal_places=2,
         null=True,
         blank=True,
     )
     total_assets_eoy = models.DecimalField(
-        max_digits=12,
+        max_digits=14,
         decimal_places=2,
         null=True,
         blank=True,
     )
     total_assets_boy = models.DecimalField(
-        max_digits=12,
+        max_digits=14,
         decimal_places=2,
         null=True,
         blank=True,
     )
     total_liabilities_eoy = models.DecimalField(
-        max_digits=12,
+        max_digits=14,
         decimal_places=2,
         null=True,
         blank=True,
     )
     total_liabilities_boy = models.DecimalField(
-        max_digits=12,
+        max_digits=14,
         decimal_places=2,
         null=True,
         blank=True,
