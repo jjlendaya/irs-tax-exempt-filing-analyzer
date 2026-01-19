@@ -127,7 +127,7 @@ You may set `-l` to `DEBUG` if you need more verbosity in the messages.
 npm run dev
 ```
 
-You're done! **Visit http://localhost:5174** to see the app.
+You're done! **Visit http://localhost:5174** to see the app. When making API requests, those should be directed to `http://localhost:8000/api/<route>`
 
 # General Information
 
