@@ -9,7 +9,6 @@ class OrganizationReturnInformationNestedSerializer(serializers.ModelSerializer)
     class Meta:
         model = OrganizationReturnInformation
         fields = [
-            "id",
             "filed_on",
             "tax_period_start_date",
             "tax_period_end_date",
@@ -32,7 +31,6 @@ class CompanySerializer(serializers.ModelSerializer):
     """Serializer for Organization with nested related OrganizationReturnInformation."""
 
     returns = OrganizationReturnInformationNestedSerializer(
-        source="returns",
         many=True,
         read_only=True,
     )
