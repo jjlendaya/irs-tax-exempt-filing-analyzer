@@ -103,10 +103,9 @@ class IRS990Strategy(XMLParserStrategy):
         # Try to find website URL
         website_elem = root.xpath(".//irs:WebsiteAddressTxt", namespaces=ns)
         if website_elem and website_elem[0].text:
-            url = website_elem[0].text.strip().lower()
-            # Ensure URL has protocol
-            if url and not url.startswith(("http://", "https://")):
-                url = f"https://{url}"
+            # We don't ensure the URL is valid here because we want to stay faithful to the original data.
+            # The URL is prepended with "https://" in the serializer class.
+            url = website_elem[0].text.strip()
             org_data["website_url"] = url
 
         # Try to find mission description

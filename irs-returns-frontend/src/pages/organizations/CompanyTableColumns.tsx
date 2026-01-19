@@ -6,6 +6,7 @@ import { SortableHeader } from "@/components/tables/SortableHeader";
 import { compareAsc } from "date-fns";
 import { DEFAULT_NULL_VALUE } from "@/lib/constants";
 import { NumberRowWithDelta } from "./NumberRowWithDelta";
+import { NullCell } from "./NullCell";
 
 const getLatestReturn = (company: Company): OrganizationReturn | null => {
   if (!company.returns || company.returns.length === 0) return null;
@@ -27,7 +28,7 @@ export const columns: ColumnDef<Company>[] = [
         <Link
           to="/companies/$companyId"
           params={{ companyId: company.id }}
-          className="font-medium underline underline-offset-4"
+          className="font-medium underline underline-offset-4 max-w-[150px] text-wrap"
         >
           {company.name}
         </Link>
@@ -68,6 +69,11 @@ export const columns: ColumnDef<Company>[] = [
     header: "Website",
     cell: ({ row }) => {
       const company = row.original;
+
+      if (!company.websiteUrl) {
+        return <NullCell />;
+      }
+
       return (
         <a
           href={company.websiteUrl}
@@ -85,7 +91,9 @@ export const columns: ColumnDef<Company>[] = [
     header: "Mission",
     cell: ({ row }) => {
       const company = row.original;
-      return <span>{company.missionDescription}</span>;
+      return (
+        <p className="max-w-[500px] text-wrap">{company.missionDescription}</p>
+      );
     },
   },
   {
@@ -218,7 +226,9 @@ export const columns: ColumnDef<Company>[] = [
     cell: ({ getValue }) => {
       const latestReturn = getValue() as OrganizationReturn | null;
       if (!latestReturn) {
-        return <div className="text-right">{DEFAULT_NULL_VALUE}</div>;
+        return (
+          <div className="flex flex-row justify-end">{DEFAULT_NULL_VALUE}</div>
+        );
       }
 
       return (

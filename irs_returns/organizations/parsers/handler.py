@@ -41,7 +41,6 @@ class XMLParser:
             if strategy.can_handle():
                 logger.debug(f"Selected {strategy_name} strategy.")
                 return strategy_name, strategy
-        logger.error(f"No strategy found for XML content: {xml_content_str}")
         raise NoStrategyFoundError(self.xml_content, available_strategies=list(self.strategy_instances.keys()))
 
     def _validate_xml(self) -> None:
@@ -54,11 +53,7 @@ class XMLParser:
         Raises:
             etree.XMLSyntaxError: If the XML content is not valid XML or not well-formed.
         """
-        try:
-            etree.fromstring(self.xml_content)
-        except etree.XMLSyntaxError as e:
-            logger.error("XML content is not valid XML or not well-formed.")
-            raise e
+        etree.fromstring(self.xml_content)
 
     def parse(self) -> dict[str, Any]:
         """
@@ -76,7 +71,7 @@ class XMLParser:
         """
         self._validate_xml()
         strategy_name, strategy = self._select_strategy()
-        logger.info(f"Using {strategy_name} handler to parse XML content.")
+        logger.debug(f"Using {strategy_name} handler to parse XML content.")
         return {
             "strategy_name": strategy_name,
             "data": strategy.parse(),

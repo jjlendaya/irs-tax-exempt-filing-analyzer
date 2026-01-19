@@ -81,6 +81,9 @@ class CompanySerializer(serializers.ModelSerializer):
         if not obj.website_url:
             return None
 
+        if obj.website_url.lower() == "n/a":
+            return None
+
         if not obj.website_url.startswith(("http://", "https://")):
             return f"https://{obj.website_url.lower().strip()}"
 

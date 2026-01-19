@@ -2,8 +2,11 @@ import logging
 from pathlib import Path
 import zipfile
 
+from lxml import etree
+
 from organizations.models import DatasetJob, Organization, OrganizationReturnInformation
 from organizations.parsers import XMLParser
+from organizations.parsers.errors import NoStrategyFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +21,14 @@ def _get_xml_files_from_zip(dataset_zip_path: str, extract_dir: Path):
 
 def process_dataset(dataset_zip_path: str, extract_dir: str, job: DatasetJob | None = None):
     """Process a dataset ZIP file: extract XML files, parse them, and create or update organizations and returns."""
+    logger.info("Starting dataset processing...")
+    logger.info("-" * 100)
+    logger.info(f"Processing dataset ZIP file: {dataset_zip_path}")
+    logger.info(f"Extracting ZIP file to: {extract_dir}")
     xml_files = _get_xml_files_from_zip(dataset_zip_path, Path(extract_dir))
     total_files = len(xml_files)
-
+    logger.info(f"Found {total_files} XML files to process.")
+    logger.info("-" * 100)
     # Update job status
     if job:
         job.status = DatasetJob.Status.PROCESSING
@@ -33,7 +41,10 @@ def process_dataset(dataset_zip_path: str, extract_dir: str, job: DatasetJob | N
     returns_created = 0
     processed_count = 0
 
+    logger.info(f"Processing {total_files} XML files...")
     for xml_file in xml_files:
+        logger.debug("-" * 60)
+        logger.debug(f"Processing XML file: {xml_file}")
         try:
             with open(xml_file, "rb") as f:
                 xml_content = f.read()
@@ -78,13 +89,26 @@ def process_dataset(dataset_zip_path: str, extract_dir: str, job: DatasetJob | N
 
                     if return_created:
                         returns_created += 1
-
+        except NoStrategyFoundError:
+            logger.info(f"Skipping XML file because no handler was found for this form type: {xml_file}")
+            continue
+        except etree.XMLSyntaxError as e:
+            logger.info(f"Skipping XML file because it is does not contain valid XML: {xml_file}")
+            logger.info(f"Specific error: {str(e)}")
+            continue
         except Exception as e:
             # Log error but continue processing other files
-            logger.error(f"Error processing {xml_file}: {str(e)}")
-            raise e
+            logger.error(f"Unknown error while processing {xml_file}: {str(e)}")
+            continue
 
         processed_count += 1
+
+        if processed_count % 100 == 0 or processed_count == total_files:
+            logger.debug("-" * 100)
+            logger.info(
+                f"Processed {processed_count} of {total_files} files ({round(processed_count / total_files * 100, 2)}%)"
+            )
+            logger.info("-" * 100)
 
         # Update progress
         if job and total_files > 0:

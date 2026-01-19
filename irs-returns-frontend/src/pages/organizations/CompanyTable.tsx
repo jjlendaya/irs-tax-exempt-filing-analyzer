@@ -8,6 +8,7 @@ import {
   useReactTable,
   type SortingState,
   type ColumnFiltersState,
+  type PaginationState,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -32,6 +33,10 @@ export function CompanyTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 50,
+  });
 
   const { data: companies, isLoading, isError, error } = useCompanies();
 
@@ -46,10 +51,12 @@ export function CompanyTable() {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
     state: {
       sorting,
       columnFilters,
       globalFilter,
+      pagination,
     },
   });
 

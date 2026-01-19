@@ -1,12 +1,8 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { DEFAULT_NULL_VALUE } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
 import type { OrganizationReturn } from "@/types/api";
 import { Delta } from "@/components/Delta";
+import { NullCell } from "./NullCell";
 
 export const NumberRowWithDelta = ({
   currentKey,
@@ -36,11 +32,8 @@ export const NumberRowWithDelta = ({
       />
     </div>
   ) : (
-    <Tooltip>
-      <TooltipTrigger>
-        <div className="text-right">{DEFAULT_NULL_VALUE}</div>
-      </TooltipTrigger>
-      <TooltipContent>No data available for this return.</TooltipContent>
-    </Tooltip>
+    <div className="flex flex-row justify-end">
+      <NullCell />
+    </div>
   );
 };
