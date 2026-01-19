@@ -139,6 +139,7 @@ To make requests to the API, you can use an app like Postman or just use cURL. I
 2. GET localhost:8000/companies/<:uuid> (public)
 3. POST localhost:8000/dataset (requires an API key)
    - Body params: `zip_url`
+4. GET localhost:8000/dataset (for getting the status of ZIP parsing jobs)
 
 **Using an API key:**
 
