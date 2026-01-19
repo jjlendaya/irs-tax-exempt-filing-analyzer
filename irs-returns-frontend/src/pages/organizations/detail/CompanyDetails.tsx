@@ -10,13 +10,21 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { DEFAULT_EMPTY_VALUE } from "@/lib/constants";
+import { Delta } from "@/components/Delta";
 
 const InfoCard = ({
   title,
-  value,
+  displayValue,
+  currentValue,
+  previousValue,
+  isCurrency = false,
 }: {
   title: string;
-  value: string | number;
+  displayValue: string | null;
+  currentValue: string | null;
+  previousValue?: string | null;
+  isCurrency?: boolean;
 }) => {
   return (
     <Card className="w-full p-0">
@@ -24,7 +32,14 @@ const InfoCard = ({
         <h2 className="font-bold text-muted-foreground uppercase text-xs tracking-wider">
           {title}
         </h2>
-        <p className="text-2xl font-bold">{value}</p>
+        <p className="text-2xl font-bold">
+          {displayValue || DEFAULT_EMPTY_VALUE}
+        </p>
+        <Delta
+          currentValue={currentValue}
+          previousValue={previousValue}
+          isCurrency={isCurrency}
+        />
       </CardContent>
     </Card>
   );
@@ -164,19 +179,29 @@ export const CompanyDetails = ({ companyId }: { companyId: string }) => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-stretch gap-4">
           <InfoCard
             title="Total Revenue"
-            value={formatCurrency(latestReturn.totalRevenue || "0")}
+            displayValue={formatCurrency(latestReturn.totalRevenue || "0")}
+            currentValue={latestReturn.totalRevenue || null}
+            previousValue={latestReturn.pyTotalRevenue || null}
+            isCurrency
           />
           <InfoCard
             title="Total Expenses"
-            value={formatCurrency(latestReturn.totalExpenses || "0")}
+            displayValue={formatCurrency(latestReturn.totalExpenses || "0")}
+            currentValue={latestReturn.totalExpenses || null}
+            previousValue={latestReturn.pyTotalExpenses || null}
+            isCurrency
           />
           <InfoCard
             title="End of Year Assets"
-            value={formatCurrency(latestReturn.totalAssetsEoy || "0")}
+            displayValue={formatCurrency(latestReturn.totalAssetsEoy || "0")}
+            currentValue={latestReturn.totalAssetsEoy || null}
+            previousValue={latestReturn.totalAssetsBoy || null}
+            isCurrency
           />
           <InfoCard
             title="Employee Count"
-            value={latestReturn.employeeCount || "N/A"}
+            displayValue={latestReturn.employeeCount?.toString() || null}
+            currentValue={latestReturn.employeeCount?.toString() || null}
           />
         </div>
       </div>
