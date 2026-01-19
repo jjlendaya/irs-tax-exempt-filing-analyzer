@@ -1,23 +1,15 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { Company } from "@/types/api";
-import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { SortableHeader } from "@/components/tables/SortableHeader";
+import { compareAsc } from "date-fns";
 
 export const columns: ColumnDef<Company>[] = [
   {
     accessorKey: "name",
     header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Organization Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
+      return <SortableHeader column={column} children="Organization Name" />;
     },
     cell: ({ row }) => {
       const company = row.original;
@@ -25,7 +17,7 @@ export const columns: ColumnDef<Company>[] = [
         <Link
           to="/companies/$companyId"
           params={{ companyId: company.id }}
-          className="font-medium hover:underline"
+          className="font-medium underline underline-offset-4"
         >
           {company.name}
         </Link>
@@ -34,19 +26,31 @@ export const columns: ColumnDef<Company>[] = [
   },
   {
     id: "latestFiling",
-    header: "Latest Filing",
-    cell: ({ row }) => {
-      const returns = row.original.returns;
-      if (!returns || returns.length === 0) {
-        return <span className="text-muted-foreground">No filings</span>;
-      }
-
-      // Get most recent return
-      const latest = returns.reduce((prev, current) =>
+    accessorFn: (row) =>
+      row.returns.reduce((prev, current) =>
         new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
-      );
+      ).filedOn || null,
+    header: ({ column }) => {
+      return <SortableHeader column={column} children="Latest Filing" />;
+    },
+    cell: ({ getValue }) => {
+      return <span>{formatDate(getValue() as string)}</span>;
+    },
+    sortingFn: (rowA, rowB) => {
+      const getLatestFiling = (company: Company) => {
+        if (!company.returns || company.returns.length === 0) return null;
+        return company.returns.reduce((prev, current) =>
+          new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+        ).filedOn;
+      };
 
-      return <span>{formatDate(latest.filedOn)}</span>;
+      // Use date-fns compareAsc for safer date comparison
+      const aFiledOn = getLatestFiling(rowA.original);
+      const bFiledOn = getLatestFiling(rowB.original);
+      if (!aFiledOn && !bFiledOn) return 0;
+      if (!aFiledOn) return -1;
+      if (!bFiledOn) return 1;
+      return compareAsc(new Date(aFiledOn), new Date(bFiledOn));
     },
   },
   {
@@ -55,7 +59,12 @@ export const columns: ColumnDef<Company>[] = [
     cell: ({ row }) => {
       const company = row.original;
       return (
-        <a href={company.websiteUrl} target="_blank" rel="noopener noreferrer">
+        <a
+          href={company.websiteUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-4"
+        >
           {company.websiteUrl}
         </a>
       );
@@ -71,27 +80,22 @@ export const columns: ColumnDef<Company>[] = [
   },
   {
     id: "totalRevenue",
+    accessorFn: (row) =>
+      row.returns.reduce((prev, current) =>
+        new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+      ).totalRevenue || "0",
     header: ({ column }) => {
       return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Revenue
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <SortableHeader
+          column={column}
+          children="Total Revenue"
+          className="justify-end"
+        />
       );
     },
-    cell: ({ row }) => {
-      const returns = row.original.returns;
-      if (!returns || returns.length === 0) return "N/A";
-
-      const latest = returns.reduce((prev, current) =>
-        new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
-      );
-
+    cell: ({ getValue }) => {
       return (
-        <div className="text-right">{formatCurrency(latest.totalRevenue)}</div>
+        <div className="text-right">{formatCurrency(getValue() as string)}</div>
       );
     },
     sortingFn: (rowA, rowB) => {
@@ -108,50 +112,101 @@ export const columns: ColumnDef<Company>[] = [
   },
   {
     id: "totalExpenses",
-    header: "Expenses",
-    cell: ({ row }) => {
-      const returns = row.original.returns;
-      if (!returns || returns.length === 0) return "N/A";
-
-      const latest = returns.reduce((prev, current) =>
+    accessorFn: (row) =>
+      row.returns.reduce((prev, current) =>
         new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+      ).totalExpenses || "0",
+    header: ({ column }) => {
+      return (
+        <SortableHeader
+          column={column}
+          children="Total Expenses"
+          className="justify-end"
+        />
       );
+    },
+    cell: ({ getValue }) => {
+      return (
+        <div className="text-right">{formatCurrency(getValue() as string)}</div>
+      );
+    },
+    sortingFn: (rowA, rowB) => {
+      const getLatestExpenses = (company: Company) => {
+        if (!company.returns || company.returns.length === 0) return 0;
+        const latest = company.returns.reduce((prev, current) =>
+          new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+        );
+        return parseFloat(latest.totalExpenses || "0");
+      };
 
       return (
-        <div className="text-right">{formatCurrency(latest.totalExpenses)}</div>
+        getLatestExpenses(rowA.original) - getLatestExpenses(rowB.original)
       );
     },
   },
   {
     id: "totalAssetsEoy",
-    header: "Assets",
-    cell: ({ row }) => {
-      const returns = row.original.returns;
-      if (!returns || returns.length === 0) return "N/A";
-
-      const latest = returns.reduce((prev, current) =>
+    accessorFn: (row) =>
+      row.returns.reduce((prev, current) =>
         new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+      ).totalAssetsEoy || "0",
+    header: ({ column }) => {
+      return <SortableHeader column={column} children="End of Year Assets" />;
+    },
+    cell: ({ getValue }) => {
+      return (
+        <div className="text-right">{formatCurrency(getValue() as string)}</div>
       );
+    },
+    sortingFn: (rowA, rowB) => {
+      const getLatestAssetsEoy = (company: Company) => {
+        if (!company.returns || company.returns.length === 0) return 0;
+        const latest = company.returns.reduce((prev, current) =>
+          new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+        );
+        return parseFloat(latest.totalAssetsEoy || "0");
+      };
 
       return (
-        <div className="text-right">
-          {formatCurrency(latest.totalAssetsEoy)}
-        </div>
+        getLatestAssetsEoy(rowA.original) - getLatestAssetsEoy(rowB.original)
       );
     },
   },
   {
     id: "employeeCount",
-    header: "Employees",
-    cell: ({ row }) => {
-      const returns = row.original.returns;
-      if (!returns || returns.length === 0) return "N/A";
-
-      const latest = returns.reduce((prev, current) =>
+    accessorFn: (row) =>
+      row.returns.reduce((prev, current) =>
         new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+      ).employeeCount ?? 0,
+    header: ({ column }) => {
+      return (
+        <SortableHeader
+          column={column}
+          children="Employees"
+          className="justify-end"
+        />
       );
+    },
+    cell: ({ getValue }) => {
+      return (
+        <div className="text-center">
+          {(getValue() as number | null) ?? "N/A"}
+        </div>
+      );
+    },
+    sortingFn: (rowA, rowB) => {
+      const getLatestEmployeeCount = (company: Company) => {
+        if (!company.returns || company.returns.length === 0) return 0;
+        const latest = company.returns.reduce((prev, current) =>
+          new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+        );
+        return latest.employeeCount ?? 0;
+      };
 
-      return <div className="text-center">{latest.employeeCount ?? "N/A"}</div>;
+      return (
+        getLatestEmployeeCount(rowA.original) -
+        getLatestEmployeeCount(rowB.original)
+      );
     },
   },
 ];
