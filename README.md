@@ -135,6 +135,8 @@ To make requests to the API, you can use an app like Postman or just use cURL. I
 
 **Endpoints:**
 
+API requests should be directed to `http://localhost:8000/api/<route>`. That is the backend server's address. The app with its UI, on the other hand, is located in http://localhost:5174.
+
 1. GET localhost:8000/companies (public)
 2. GET localhost:8000/companies/<:uuid> (public)
 3. POST localhost:8000/dataset (requires an API key)
