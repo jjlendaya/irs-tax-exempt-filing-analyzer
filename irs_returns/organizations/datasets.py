@@ -29,6 +29,7 @@ def process_dataset(dataset_zip_path: str, extract_dir: str, job: DatasetJob | N
     total_files = len(xml_files)
     logger.info(f"Found {total_files} XML files to process.")
     logger.info("-" * 100)
+
     # Update job status
     if job:
         job.status = DatasetJob.Status.PROCESSING
@@ -40,9 +41,12 @@ def process_dataset(dataset_zip_path: str, extract_dir: str, job: DatasetJob | N
     organizations_created = 0
     returns_created = 0
     processed_count = 0
+    skipped_count = 0
+    total_attempted = 0
 
     logger.info(f"Processing {total_files} XML files...")
     for xml_file in xml_files:
+        total_attempted += 1
         logger.debug("-" * 60)
         logger.debug(f"Processing XML file: {xml_file}")
         try:
@@ -89,32 +93,32 @@ def process_dataset(dataset_zip_path: str, extract_dir: str, job: DatasetJob | N
 
                     if return_created:
                         returns_created += 1
+            processed_count += 1
         except NoStrategyFoundError:
-            logger.info(f"Skipping XML file because no handler was found for this form type: {xml_file}")
+            logger.debug(f"Skipping XML file because no handler was found for this form type: {xml_file}")
+            skipped_count += 1
             continue
-        except etree.XMLSyntaxError as e:
-            logger.info(f"Skipping XML file because it is does not contain valid XML: {xml_file}")
-            logger.info(f"Specific error: {str(e)}")
+        except etree.XMLSyntaxError:
+            logger.debug(f"Skipping XML file because it is does not contain valid XML: {xml_file}")
+            skipped_count += 1
             continue
         except Exception as e:
             # Log error but continue processing other files
             logger.error(f"Unknown error while processing {xml_file}: {str(e)}")
+            skipped_count += 1
             continue
 
-        processed_count += 1
-
-        if processed_count % 100 == 0 or processed_count == total_files:
-            logger.debug("-" * 100)
+        if total_attempted % 100 == 0 or total_attempted == total_files:
             logger.info(
-                f"Processed {processed_count} of {total_files} files ({round(processed_count / total_files * 100, 2)}%)"
+                f"Attempted {total_attempted} of {total_files} files ({round(total_attempted / total_files * 100, 2)}%) - Skipped {skipped_count} files - Processed {processed_count} files"
             )
-            logger.info("-" * 100)
+            logger.info("-" * 60)
 
-        # Update progress
-        if job and total_files > 0:
-            progress = 20 + int((processed_count / total_files) * 70)  # 20 - 90% range
-            job.progress = progress
-            job.processed_files = processed_count
-            job.save(update_fields=["progress", "processed_files"])
+            # Update progress
+            if job and total_files > 0:
+                progress = 20 + int((total_attempted / total_files) * 70)  # 20 - 90% range
+                job.progress = progress
+                job.processed_files = total_attempted
+                job.save(update_fields=["progress", "processed_files"])
 
     return organizations_created, returns_created
