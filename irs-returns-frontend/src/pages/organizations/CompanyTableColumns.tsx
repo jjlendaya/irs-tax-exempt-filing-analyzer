@@ -42,7 +42,13 @@ export const columns: ColumnDef<Company>[] = [
       return <SortableHeader column={column} children="Latest Filing" />;
     },
     cell: ({ getValue }) => {
-      return <span>{formatDate(getValue() as string)}</span>;
+      const getLatestFiling = (company: Company) => {
+        if (!company.returns || company.returns.length === 0) return null;
+        return company.returns.reduce((prev, current) =>
+          new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+        ).filedOn;
+      };
+      return <span>{formatDate(getLatestFiling(getValue() as Company))}</span>;
     },
     sortingFn: (rowA, rowB) => {
       const getLatestFiling = (company: Company) => {
