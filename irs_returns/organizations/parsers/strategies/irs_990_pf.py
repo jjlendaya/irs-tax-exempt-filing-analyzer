@@ -12,17 +12,17 @@ from .errors import StrategyCannotHandleXMLContentError
 logger = logging.getLogger(__name__)
 
 
-class IRS990Strategy(XMLParserStrategy):
-    """Strategy for parsing IRS Form 990 XML files."""
+class IRS990PFStrategy(XMLParserStrategy):
+    """Strategy for parsing IRS Form 990PF XML files."""
 
     IRS_NAMESPACE = "http://www.irs.gov/efile"
 
     def can_handle(self) -> bool:
-        """Check if this is an IRS Form 990 XML file."""
+        """Check if this is an IRS Form 990PF XML file."""
         try:
             root = etree.fromstring(self.xml_content)
             self._validate_has_irs_namespace(root)
-            self._validate_has_irs_990_root_elements(root)
+            self._validate_has_irs_990_pf_root_elements(root)
             self._validate_has_correct_return_type(root)
             return True
         except StrategyCannotHandleXMLContentError:
@@ -36,22 +36,22 @@ class IRS990Strategy(XMLParserStrategy):
                 return
         self._raise_cannot_handle_error()
 
-    def _validate_has_irs_990_root_elements(self, root: etree.Element) -> None:
-        """Check if the XML content has the IRS 990 root elements."""
+    def _validate_has_irs_990_pf_root_elements(self, root: etree.Element) -> None:
+        """Check if the XML content has the IRS 990PF root elements."""
         root_tag = root.tag.lower()
-        if "return" in root_tag or "irs990" in root_tag:
+        if "return" in root_tag or "irs990pf" in root_tag:
             return
         self._raise_cannot_handle_error()
 
     def _validate_has_correct_return_type(self, root: etree.Element) -> None:
         """Check if the XML content has the correct return type."""
         return_type = root.find(".//irs:ReturnHeader/irs:ReturnTypeCd", namespaces={"irs": self.IRS_NAMESPACE})
-        if return_type is None or return_type.text.lower() != "990":
+        if return_type is None or return_type.text.lower() != "990pf":
             self._raise_cannot_handle_error()
 
     def parse(self) -> dict[str, Any]:
         """
-        Parse an IRS Form 990 XML file and extract organization and return information.
+        Parse an IRS Form 990PF XML file and extract organization and return information.
 
         Args:
             xml_content: The XML file content as bytes
@@ -65,7 +65,7 @@ class IRS990Strategy(XMLParserStrategy):
         # Parse XML with namespace support
         root = etree.fromstring(self.xml_content)
 
-        # IRS Form 990 XML typically uses this namespace
+        # IRS Form 990PF XML typically uses this namespace
         ns = {"irs": self.IRS_NAMESPACE}
 
         # Try to find namespace from root element if present
@@ -154,26 +154,11 @@ class IRS990Strategy(XMLParserStrategy):
                 logger.debug(f"Error parsing filed date: {filed_date_elem[0].text}", exc_info=True)
                 pass
 
-        # Extract employee count
-        employee_elem = root.xpath(".//irs:TotalEmployeeCnt", namespaces=ns)
-        if employee_elem and employee_elem[0].text:
-            try:
-                return_data["employee_count"] = int(employee_elem[0].text)
-            except (ValueError, TypeError):
-                logger.debug(f"Error parsing employee count: {employee_elem[0].text}", exc_info=True)
-                pass
-
-        # Extract previous year employee count
-        py_employee_elem = root.xpath(".//irs:PYTotalEmployeeCnt", namespaces=ns)
-        if py_employee_elem and py_employee_elem[0].text:
-            try:
-                return_data["py_employee_count"] = int(py_employee_elem[0].text)
-            except (ValueError, TypeError):
-                logger.debug(f"Error parsing previous year employee count: {py_employee_elem[0].text}", exc_info=True)
-                pass
+        # 990 PF doesn't seem to have an overall employee count.
+        return_data["employee_count"] = None
 
         # Extract total revenue
-        revenue_elem = root.xpath(".//irs:CYTotalRevenueAmt", namespaces=ns)
+        revenue_elem = root.xpath(".//irs:TotalRevAndExpnssAmt", namespaces=ns)
         if revenue_elem and revenue_elem[0].text:
             try:
                 return_data["total_revenue"] = self._parse_decimal(revenue_elem[0].text)
@@ -181,31 +166,13 @@ class IRS990Strategy(XMLParserStrategy):
                 logger.debug(f"Error parsing total revenue: {revenue_elem[0].text}", exc_info=True)
                 pass
 
-        # Extract previous year total revenue
-        py_revenue_elem = root.xpath(".//irs:PYTotalRevenueAmt", namespaces=ns)
-        if py_revenue_elem and py_revenue_elem[0].text:
-            try:
-                return_data["py_total_revenue"] = self._parse_decimal(py_revenue_elem[0].text)
-            except (ValueError, TypeError):
-                logger.debug(f"Error parsing previous year total revenue: {py_revenue_elem[0].text}", exc_info=True)
-                pass
-
         # Extract total expenses
-        expense_elem = root.xpath(".//irs:CYTotalExpensesAmt", namespaces=ns)
+        expense_elem = root.xpath(".//irs:TotalExpensesRevAndExpnssAmt", namespaces=ns)
         if expense_elem and expense_elem[0].text:
             try:
                 return_data["total_expenses"] = self._parse_decimal(expense_elem[0].text)
             except (ValueError, TypeError):
                 logger.debug(f"Error parsing total expenses: {expense_elem[0].text}", exc_info=True)
-                pass
-
-        # Extract previous year total expenses
-        py_expense_elem = root.xpath(".//irs:PYTotalExpensesAmt", namespaces=ns)
-        if py_expense_elem and py_expense_elem[0].text:
-            try:
-                return_data["py_total_expenses"] = self._parse_decimal(py_expense_elem[0].text)
-            except (ValueError, TypeError):
-                logger.debug(f"Error parsing previous year total expenses: {py_expense_elem[0].text}", exc_info=True)
                 pass
 
         # Extract total assets EOY

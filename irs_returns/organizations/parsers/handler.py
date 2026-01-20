@@ -8,6 +8,8 @@ from lxml import etree
 from organizations.parsers.errors import NoStrategyFoundError
 from organizations.parsers.strategies.general import XMLParserStrategy
 from organizations.parsers.strategies.irs_990 import IRS990Strategy
+from organizations.parsers.strategies.irs_990_ez import IRS990EZStrategy
+from organizations.parsers.strategies.irs_990_pf import IRS990PFStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -17,9 +19,8 @@ class XMLParser:
 
     STRATEGY_CLASSES = {
         "IRS Form 990": IRS990Strategy,
-        # TODO: Implement other strategies here
-        # "IRS990PF": IRS990PFStrategy,
-        # "IRS990EZ": IRS990EZStrategy,
+        "IRS Form 990PF": IRS990PFStrategy,
+        "IRS Form 990EZ": IRS990EZStrategy,
     }
 
     def __init__(self, xml_content: bytes):
