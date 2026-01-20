@@ -22,8 +22,6 @@ export const Delta = ({
   const noDeltaPercentage =
     deltaPercentage === null || deltaPercentage === undefined;
 
-  const sign = !noDelta ? (delta > 0 ? "+" : "-") : "";
-
   const absoluteChange = !noDelta
     ? isCurrency
       ? formatCurrency(delta)
@@ -37,7 +35,8 @@ export const Delta = ({
         {
           "text-green-500 bg-green-500/10": !noDelta && delta > 0,
           "text-red-500 bg-red-500/10": !noDelta && delta < 0,
-          "text-muted-foreground bg-muted-foreground/10": noDelta,
+          "text-muted-foreground bg-muted-foreground/10":
+            noDelta || delta === 0,
         }
       )}
     >
@@ -45,7 +44,7 @@ export const Delta = ({
         <TooltipTrigger className="cursor-pointer">
           <p className="text-xs">
             {!noDeltaPercentage
-              ? `${sign}${Math.abs(deltaPercentage).toFixed(1)}%`
+              ? `${deltaPercentage.toFixed(1)}%`
               : DEFAULT_NULL_VALUE}
           </p>
         </TooltipTrigger>
@@ -65,7 +64,7 @@ export const Delta = ({
                 <span className="font-bold">
                   Percentage Change:{" "}
                   {deltaPercentage !== null && deltaPercentage !== undefined
-                    ? `${sign}${Math.abs(deltaPercentage).toFixed(1)}%`
+                    ? `${deltaPercentage.toFixed(1)}%`
                     : DEFAULT_NULL_VALUE}
                 </span>
               </>
