@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ExternalLinkIcon, InfoIcon } from "lucide-react";
+import { ArrowLeftIcon, ExternalLinkIcon, InfoIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { DEFAULT_EMPTY_VALUE } from "@/lib/constants";
 import { Delta } from "@/components/Delta";
+import { Link } from "@tanstack/react-router";
 
 const InfoCard = ({
   title,
@@ -93,6 +94,11 @@ export const CompanyDetails = ({ companyId }: { companyId: string }) => {
   return (
     <main className="container mx-auto py-10 px-10 md:px-0">
       <div className="flex flex-col gap-8">
+        <Button variant="outline" asChild className="w-fit">
+          <Link to="/companies" className="flex flex-row items-center gap-2">
+            <ArrowLeftIcon /> Back to Companies
+          </Link>
+        </Button>
         <Card>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-row items-center justify-between w-full">
