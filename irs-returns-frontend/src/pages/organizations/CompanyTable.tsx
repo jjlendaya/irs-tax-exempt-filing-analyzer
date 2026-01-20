@@ -157,8 +157,14 @@ export function CompanyTable() {
       {/* Pagination */}
       <div className="flex items-center justify-end space-x-2">
         <div className="flex-1 text-sm text-muted-foreground">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+          {isLoading ? (
+            <Skeleton className="h-4 w-24" />
+          ) : (
+            <span>
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </span>
+          )}
         </div>
         <Button
           variant="outline"
