@@ -93,14 +93,13 @@ The important thing to note is that each of these items is relatively easy to ad
    - Depending on whether the expense categories are standardized or not, we may need a new `ReturnExpense` model in the backend.
    - Adding the chart is not as hard because it's just a histogram. Most chart libraries have that as a very basic functionality, and the only challenge would be making it mobile responsive. A good library for this is amcharts5.
 
-3. Other Form Types
+3. 990T Form Type
 
-   - The specific form types that are missing are 990PF and 990EZ.
-   - **IMPORTANT NOTE: I actually tested the parser with 990PF and 990EZ and it DOES WORK, but I'm not 100% confident that the mappings are correct so I've decided to not support them for now.**
-   - This is both simple and complicated. I think the best term for this is that it's "tedious" in the sense that adding a new form type to the backend is relatively easy. The issue is identifying the mapping between XML fields and the form fields. Thankfully, we have the [annotated forms](https://www.irs.gov/charities-non-profits/tax-exempt-organization-search-teos-annotated-forms) to help with this.
+   - The parsers for 990PF and 990EZ have been implemented, but I see there's another form type called 990T. It seems to be completely related to taxation and has little information on revenue or expenses so I've decided to leave it alone for now.
 
 4. Staffing Signal and Delta on Employee Headcount
    - As far as I can tell, the 990 returns only have the head count for the current year. If we wanted to implement a previous year comparison, we would need to also get the returns from the previous year.
+   - Some form types don't even have a total employee headcount at all. In fact, I don't see this in any form except for 990.
 
 ## Parsing Behavior
 
@@ -108,3 +107,12 @@ The important thing to note is that each of these items is relatively easy to ad
 2. Little to no transformations of the data are performed other than trimming extra whitespace around the value. For example, I don't append `https://` to company website URLs that don't include it and I don't standardize capitalization at the point of parsing the ZIP file. The database of returns that the app has should perfectly mirror what's written on the return as much as possible. Transformations can always be done in the presentation layer, but once a return is stored in the database, we lose the original data if we transform it.
 3. This means that transformations on the data occur when the REST API is sending out the values.
 4. I use UUIDs as the database primary key to make it harder to guess or enumerate records, improving security.
+
+## Points for Improvement
+
+Other than the items I would've liked to add above:
+
+1. There definitely has to be more robust checking and verification of the data. This application is about data accuracy which means that displaying anything incorrectly would be a nightmare. Automated tests will have to be stringent. I'd love to have automated tests against real XML files or even a real ZIP file to verify that the data is indeed accurate.
+2. Some transformations need work. In particular, the transformation to set the mission statement to capital or paragraph case can miss important cases. It will indiscriminately lowercase any acronyms, etc. This is a hard problem to solve and may even require manual verification. Some system needs to be in place to either automatically transform the field data or replace it entirely when presenting it. The database should still keep the original returns data at all times. Perhaps this is something AI can help solve.
+3. This app requires more manual testing. I keep seeing and having to handle edge cases regarding how data is displayed in the table and in the details pages. Some intensive manual QA with live data is required to catch as many of these edge cases as possible. Again, automated tests against real XML files would be great as well.
+4. The table's implementation is technically not built to handle the future data load of the application. Right now, its searching and sorting are purely client side. This works fine for now where I've got ~40,000 rows because Tanstack is so efficient, but once it starts reaching hundreds of thousands of rows, it will become a problem. The "right" way to do this would be to mix client and server-side searching and pagination. The client will prefetch a large amount of data, and then it will query the server for more records any time some record is not present or if sorting is necessary. Essentially, the client will slowly accumulate more data and query the server less frequently the more the user interacts with the table. It's quite complex to set up which is why I didn't do it here yet.
