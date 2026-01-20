@@ -7,6 +7,12 @@ import { compareAsc } from "date-fns";
 import { DEFAULT_NULL_VALUE } from "@/lib/constants";
 import { NumberRowWithDelta } from "./NumberRowWithDelta";
 import { NullCell } from "./NullCell";
+import { InfoIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const getLatestReturn = (company: Company): OrganizationReturn | null => {
   if (!company.returns || company.returns.length === 0) return null;
@@ -82,7 +88,7 @@ export const columns: ColumnDef<Company>[] = [
           href={company.websiteUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline underline-offset-4"
+          className="underline underline-offset-4 max-w-[100px] text-wrap break-all"
         >
           {company.websiteUrl}
         </a>
@@ -94,8 +100,10 @@ export const columns: ColumnDef<Company>[] = [
     header: "Mission",
     cell: ({ row }) => {
       const company = row.original;
-      return (
+      return company.missionDescription ? (
         <p className="max-w-[500px] text-wrap">{company.missionDescription}</p>
+      ) : (
+        <NullCell />
       );
     },
   },
@@ -183,7 +191,26 @@ export const columns: ColumnDef<Company>[] = [
     id: "totalAssetsEoy",
     accessorFn: (row) => getLatestReturn(row),
     header: ({ column }) => {
-      return <SortableHeader column={column} children="End of Year Assets" />;
+      return (
+        <div className="flex flex-row justify-end gap-1 items-center">
+          <SortableHeader
+            column={column}
+            children="End of Year Assets"
+            className="justify-end"
+          />
+          <Tooltip>
+            <TooltipTrigger>
+              <InfoIcon className="w-4 h-4 cursor-pointer" />
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p>
+                Note: The deltas here are with respect to the assets at the
+                beginning of the year. This is not a YoY change.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      );
     },
     cell: ({ getValue }) => {
       const latestReturn = getValue() as OrganizationReturn | null;
