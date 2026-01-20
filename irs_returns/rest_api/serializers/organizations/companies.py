@@ -81,13 +81,14 @@ class CompanySerializer(serializers.ModelSerializer):
         if not obj.website_url:
             return None
 
-        if obj.website_url.lower() == "n/a":
+        website_url = obj.website_url.lower().strip()
+        if website_url == "n/a":
             return None
 
-        if not obj.website_url.startswith(("http://", "https://")):
-            return f"https://{obj.website_url.lower().strip()}"
+        if not website_url.startswith(("http://", "https://")):
+            website_url = f"https://{website_url}"
 
-        return obj.website_url
+        return website_url
 
     def get_mission_description(self, obj: Organization) -> str | None:
         if not obj.mission_description:
