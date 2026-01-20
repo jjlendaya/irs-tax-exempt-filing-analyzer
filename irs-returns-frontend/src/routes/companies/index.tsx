@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CompanyTable } from "@/pages/organizations/CompanyTable";
 
 export const Route = createFileRoute("/companies/")({
+  beforeLoad: async () => {
+    document.title = "IRS Returns - Companies";
+  },
   component: CompaniesPage,
 });
 

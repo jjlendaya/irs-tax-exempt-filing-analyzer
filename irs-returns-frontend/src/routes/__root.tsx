@@ -7,6 +7,9 @@ export interface RouterContext {
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
+  beforeLoad: async () => {
+    document.title = "IRS Returns";
+  },
   component: Root,
   notFoundComponent: () => <div>Not Found</div>,
 });

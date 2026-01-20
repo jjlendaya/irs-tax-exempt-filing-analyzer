@@ -4,6 +4,9 @@ import { CompanyDetails } from "@/pages/organizations/detail/CompanyDetails";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/companies/$companyId")({
+  beforeLoad: async () => {
+    document.title = `IRS Returns - Company Details`;
+  },
   loader: async ({ params }) => {
     const { companyId } = params;
     await queryClient.ensureQueryData({
