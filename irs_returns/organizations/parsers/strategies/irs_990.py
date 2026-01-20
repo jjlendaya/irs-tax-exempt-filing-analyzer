@@ -116,6 +116,7 @@ class IRS990Strategy(XMLParserStrategy):
     def _extract_return_data(self, root: etree.Element, ns: dict[str, str]) -> dict[str, Any]:
         """Extract return information from XML root."""
         return_data = {
+            "return_type": "990",
             "filed_on": None,
             "tax_period_start_date": None,
             "tax_period_end_date": None,

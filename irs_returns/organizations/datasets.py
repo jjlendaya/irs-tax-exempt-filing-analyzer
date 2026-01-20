@@ -77,6 +77,8 @@ def process_dataset(dataset_zip_path: str, extract_dir: str, job: DatasetJob | N
                         tax_period_start_date=return_data["tax_period_start_date"],
                         tax_period_end_date=return_data["tax_period_end_date"],
                         defaults={
+                            "original_file_name": xml_file.name,
+                            "return_type": return_data.get("return_type"),
                             "filed_on": return_data.get("filed_on"),
                             "employee_count": return_data.get("employee_count"),
                             "py_employee_count": return_data.get("py_employee_count"),

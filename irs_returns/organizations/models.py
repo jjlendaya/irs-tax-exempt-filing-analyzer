@@ -11,6 +11,8 @@ class Organization(UUIDAbstractModel, TimestampedAbstractModel):
 
 class OrganizationReturnInformation(UUIDAbstractModel, TimestampedAbstractModel):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="returns")
+    original_file_name = models.CharField(max_length=512, blank=True)
+    return_type = models.CharField(max_length=255, blank=True)
     filed_on = models.DateField()
     tax_period_start_date = models.DateField()
     tax_period_end_date = models.DateField()
