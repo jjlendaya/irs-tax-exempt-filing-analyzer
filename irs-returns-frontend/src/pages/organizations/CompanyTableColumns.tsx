@@ -4,7 +4,6 @@ import type { Company, OrganizationReturn } from "@/types/api";
 import { formatDate } from "@/lib/utils";
 import { SortableHeader } from "@/components/tables/SortableHeader";
 import { compareAsc } from "date-fns";
-import { DEFAULT_NULL_VALUE } from "@/lib/constants";
 import { NumberRowWithDelta } from "./NumberRowWithDelta";
 import { NullCell } from "./NullCell";
 import { InfoIcon } from "lucide-react";
@@ -14,12 +13,46 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const getLatestReturn = (company: Company): OrganizationReturn | null => {
-  if (!company.returns || company.returns.length === 0) return null;
+const getLatestReturn = (company: Company): OrganizationReturn | undefined => {
+  if (!company.returns || company.returns.length === 0) return undefined;
 
   return company.returns.reduce((prev, current) =>
     new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
   );
+};
+
+const getNullableSortValue = (a: number | null, b: number | null) => {
+  if (a === null && b === null) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return a - b;
+};
+
+type NumericStringKeys<T> = {
+  [K in keyof T]: T[K] extends string | null ? K : never;
+}[keyof T];
+
+const getNumericValueFromLatestReturn = <
+  K extends NumericStringKeys<OrganizationReturn>,
+>(
+  company: Company,
+  key: K
+) => {
+  if (!company.returns || company.returns.length === 0) {
+    return null;
+  }
+  const latest = company.returns.reduce((prev, current) =>
+    new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
+  );
+
+  if (
+    latest[key] === null ||
+    latest[key] === undefined ||
+    isNaN(parseFloat(latest[key]))
+  ) {
+    return null;
+  }
+  return parseFloat(latest[key]);
 };
 
 export const columns: ColumnDef<Company>[] = [
@@ -109,7 +142,7 @@ export const columns: ColumnDef<Company>[] = [
   },
   {
     id: "totalRevenue",
-    accessorFn: (row) => getLatestReturn(row),
+    accessorFn: (row) => getLatestReturn(row)?.totalRevenue ?? undefined,
     header: ({ column }) => {
       return (
         <SortableHeader
@@ -119,36 +152,36 @@ export const columns: ColumnDef<Company>[] = [
         />
       );
     },
-    cell: ({ getValue }) => {
-      const latestReturn = getValue() as OrganizationReturn | null;
-      if (!latestReturn) {
-        return <div className="text-right">{DEFAULT_NULL_VALUE}</div>;
-      }
-
-      return (
+    cell: ({ row }) => {
+      const latestReturn = getLatestReturn(row.original);
+      return latestReturn ? (
         <NumberRowWithDelta
           currentKey="totalRevenue"
           previousKey="pyTotalRevenue"
           returnValue={latestReturn}
           isCurrency
         />
+      ) : (
+        <NullCell />
       );
     },
     sortingFn: (rowA, rowB) => {
-      const getLatestRevenue = (company: Company) => {
-        if (!company.returns || company.returns.length === 0) return 0;
-        const latest = company.returns.reduce((prev, current) =>
-          new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
-        );
-        return parseFloat(latest.totalRevenue || "0");
-      };
+      const aValue = getNumericValueFromLatestReturn(
+        rowA.original,
+        "totalRevenue"
+      );
+      const bValue = getNumericValueFromLatestReturn(
+        rowB.original,
+        "totalRevenue"
+      );
 
-      return getLatestRevenue(rowA.original) - getLatestRevenue(rowB.original);
+      return getNullableSortValue(aValue, bValue);
     },
+    sortUndefined: "last",
   },
   {
     id: "totalExpenses",
-    accessorFn: (row) => getLatestReturn(row),
+    accessorFn: (row) => getLatestReturn(row)?.totalExpenses ?? undefined,
     header: ({ column }) => {
       return (
         <SortableHeader
@@ -158,34 +191,32 @@ export const columns: ColumnDef<Company>[] = [
         />
       );
     },
-    cell: ({ getValue }) => {
-      const latestReturn = getValue() as OrganizationReturn | null;
-      if (!latestReturn) {
-        return <div className="text-right">{DEFAULT_NULL_VALUE}</div>;
-      }
-
-      return (
+    cell: ({ row }) => {
+      const latestReturn = getLatestReturn(row.original);
+      return latestReturn ? (
         <NumberRowWithDelta
           currentKey="totalExpenses"
           previousKey="pyTotalExpenses"
           returnValue={latestReturn}
           isCurrency
         />
+      ) : (
+        <NullCell />
       );
     },
     sortingFn: (rowA, rowB) => {
-      const getLatestExpenses = (company: Company) => {
-        if (!company.returns || company.returns.length === 0) return 0;
-        const latest = company.returns.reduce((prev, current) =>
-          new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
-        );
-        return parseFloat(latest.totalExpenses || "0");
-      };
-
-      return (
-        getLatestExpenses(rowA.original) - getLatestExpenses(rowB.original)
+      const aValue = getNumericValueFromLatestReturn(
+        rowA.original,
+        "totalExpenses"
       );
+      const bValue = getNumericValueFromLatestReturn(
+        rowB.original,
+        "totalExpenses"
+      );
+
+      return getNullableSortValue(aValue, bValue);
     },
+    sortUndefined: "last",
   },
   {
     id: "totalAssetsEoy",
@@ -212,34 +243,32 @@ export const columns: ColumnDef<Company>[] = [
         </div>
       );
     },
-    cell: ({ getValue }) => {
-      const latestReturn = getValue() as OrganizationReturn | null;
-      if (!latestReturn) {
-        return <div className="text-right">{DEFAULT_NULL_VALUE}</div>;
-      }
-
-      return (
+    cell: ({ row }) => {
+      const latestReturn = getLatestReturn(row.original);
+      return latestReturn ? (
         <NumberRowWithDelta
           currentKey="totalAssetsEoy"
           previousKey="totalAssetsBoy"
           returnValue={latestReturn}
           isCurrency
         />
+      ) : (
+        <NullCell />
       );
     },
     sortingFn: (rowA, rowB) => {
-      const getLatestAssetsEoy = (company: Company) => {
-        if (!company.returns || company.returns.length === 0) return 0;
-        const latest = company.returns.reduce((prev, current) =>
-          new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
-        );
-        return parseFloat(latest.totalAssetsEoy || "0");
-      };
-
-      return (
-        getLatestAssetsEoy(rowA.original) - getLatestAssetsEoy(rowB.original)
+      const aValue = getNumericValueFromLatestReturn(
+        rowA.original,
+        "totalAssetsEoy"
       );
+      const bValue = getNumericValueFromLatestReturn(
+        rowB.original,
+        "totalAssetsEoy"
+      );
+
+      return getNullableSortValue(aValue, bValue);
     },
+    sortUndefined: "last",
   },
   {
     id: "employeeCount",
@@ -253,35 +282,31 @@ export const columns: ColumnDef<Company>[] = [
         />
       );
     },
-    cell: ({ getValue }) => {
-      const latestReturn = getValue() as OrganizationReturn | null;
-      if (!latestReturn) {
-        return (
-          <div className="flex flex-row justify-end">{DEFAULT_NULL_VALUE}</div>
-        );
-      }
-
-      return (
+    cell: ({ row }) => {
+      const latestReturn = getLatestReturn(row.original);
+      return latestReturn ? (
         <NumberRowWithDelta
           currentKey="employeeCount"
           previousKey="pyEmployeeCount"
           returnValue={latestReturn}
         />
+      ) : (
+        <NullCell />
       );
     },
     sortingFn: (rowA, rowB) => {
       const getLatestEmployeeCount = (company: Company) => {
-        if (!company.returns || company.returns.length === 0) return 0;
+        if (!company.returns || company.returns.length === 0) return null;
         const latest = company.returns.reduce((prev, current) =>
           new Date(current.filedOn) > new Date(prev.filedOn) ? current : prev
         );
-        return latest.employeeCount ?? 0;
+        return latest.employeeCount ?? null;
       };
 
-      return (
-        getLatestEmployeeCount(rowA.original) -
-        getLatestEmployeeCount(rowB.original)
-      );
+      const aValue = getLatestEmployeeCount(rowA.original);
+      const bValue = getLatestEmployeeCount(rowB.original);
+      return getNullableSortValue(aValue, bValue);
     },
+    sortUndefined: "last",
   },
 ];
